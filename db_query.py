@@ -42,10 +42,19 @@ def getEmpleadosDb():
 
         # print(json.dumps(json_row, indent=4))
         # Create an Empleado object from each row
-        empleado = Empleado(**json_row)
+        empleado = Empleado()
+        empleado.__dict__.update(json_row)
+
         print(f"Processing employee: {empleado.NombreEmpleado}")
         #Process empleado object here, for example:
         empleados.append(empleado)
+        empleado.CodigoEmpleado = str(empleado.CodigoEmpleado).zfill(5)
+        if empleado.Sexo == 1:
+            empleado.Sexo = 'Hombre'
+        elif empleado.Sexo == 2:
+            empleado.Sexo = 'Mujer'
+
+
 
     cursor.close()
     conn.close()

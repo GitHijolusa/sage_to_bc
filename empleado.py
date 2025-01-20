@@ -1,8 +1,25 @@
 class Empleado:
-    def __init__(self, **kwargs):
-        for key, value in kwargs.items():
-            setattr(self, key, value)
-        self.odata_etag = kwargs.get('@odata.etag')
+    def __init__(self):
+        self.CodigoEmpleado = None
+        self.NombreEmpleado = None
+        self.SegundoApellidoEmpleado = None
+        self.PrimerApellidoEmpleado = None
+        self.DireccionCompleta = None
+        self.Municipio = None
+        self.CodigoPostal = None
+        self.Provincia = None
+        self.Telefono = None
+        self.TelefonoMovil = None
+        self.EMail1 = None
+        self.FechaNacimiento = None
+        self.ProvNumSoe = None
+        self.Sexo = None
+        self.SiglaNacion = None
+        self.FechaInicioContrato = None
+        self.FechaFinalContrato = None
+        self.IBANReceptor = None
+        self.Dni = None
+        self.odata_etag = None
     def __str__(self):
         return f"""
         SiglaNacion: {self.SiglaNacion}
@@ -27,27 +44,7 @@ class Empleado:
         """
 
         
-    def __init__(self):
-        self.SiglaNacion = None
-        self.Dni = None
-        self.CodigoEmpleado = None
-        self.NombreEmpleado = None
-        self.ProvNumSoe = None
-        self.PrimerApellidoEmpleado = None
-        self.SegundoApellidoEmpleado = None
-        self.CodigoPostal = None
-        self.DireccionCompleta = None
-        self.Telefono = None
-        self.TelefonoMovil = None
-        self.Municipio = None
-        self.Provincia = None
-        self.Sexo = None
-        self.FechaNacimiento = None
-        self.EMail1 = None
-        self.FechaInicioContrato = None
-        self.FechaFinalContrato = None
-        self.IBANReceptor = None
-        self.odata_etag = None
+
 
 
 

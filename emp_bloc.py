@@ -3,9 +3,10 @@ from bc_requests import business_central_request
 import db_query
 from empleado import Empleado
 # import setup
-
-
-
+postEmpleados = []
+patchEmpleados = []
+empleadosDB = []
+empleadosBc = []
 
 def getEmpleadosBC():
     """
@@ -19,25 +20,87 @@ def getEmpleadosBC():
     Returns:
         list: Una lista con los códigos de empleado.
     """
-    listaEmpleadosActualesBC = []
+    
     try:
         responseData = business_central_request(method='GET')
-        print(responseData)
+        # print(responseData)
         if responseData:
             for item in responseData['value']:
-                empleado = Empleado(**item)
-                listaEmpleadosActualesBC.append(empleado)
+                empleado = Empleado()
+                empleado.CodigoEmpleado = item.get('No')
+                empleado.NombreEmpleado = item.get('Name')
+                empleado.PrimerApellidoEmpleado = item.get('First_Family_Name')
+                empleado.SegundoApellidoEmpleado = item.get('Second_Family_Name')
+                empleado.DireccionCompleta = item.get('Address')
+                empleado.CodigoPostal = item.get('Post_Code')
+                empleado.Municipio = item.get('City')
+                empleado.Provincia = item.get('County')
+                empleado.Telefono = item.get('Phone_No_2')
+                empleado.TelefonoMovil = item.get('Mobile_Phone_No')
+                empleado.EMail1 = item.get('E_Mail')
+                empleado.FechaNacimiento = item.get('Birth_Date')
+                empleado.Dni = item.get('CifNif_MPX_LDR')
+                empleado.IBANReceptor = item.get('Bank_Account_No')
+                empleado.Sexo = item.get('Gender')
+                empleado.FechaInicioContrato = item.get('Employment_Date')
+                empleado.FechaFinalContrato = item.get('Termination_Date')
+                empleado.SiglaNacion = item.get('Country_Region_Code')
+                empleado.ProvNumSoe = item.get('Social_Security_No')
+                empleado.odata_etag = item.get('@odata.etag')
+                # ... asignar otros atributos si es necesario ...
+
+                empleadosBc.append(empleado)
 
     except TypeError as e:
         print(f"Error: {e}")
-    print (f"Empleados en BC: {len(listaEmpleadosActualesBC)} ")
-    print(listaEmpleadosActualesBC)
-    return listaEmpleadosActualesBC
+    # print (f"Empleados en BC: {len(listaEmpleadosBC)} ")
+    for empleado in empleadosBc:
+        print(empleado)
+    return empleadosBc
 
 def getEmpleadosDB():
-    empleados = db_query.getEmpleadosDb()
-    return empleados
+    global empleadosDB
+    empleadosDB = db_query.getEmpleadosDb()
 
+def getdiffEmpleados():
+    print(f"empleados en BC: {len(empleadosBc)}")
+    print(f"empleados en DB: {len(empleadosDB)}")
+    for empleadoDB in empleadosDB:
+        found = False
+        for empleadoBC in empleadosBc:
+            if empleadoDB.Dni == empleadoBC.Dni:
+                if empleadoDB.__dict__ != empleadoBC.__dict__:
+                    empleadoDB.odata_etag = empleadoBC.odata_etag
+                    patchEmpleados.append(empleadoDB)
+                found = True
+                break
+        if not found:
+            postEmpleados.append(empleadoDB)
+
+    print(f"Total number of new employees: {len(postEmpleados)}")
+
+    print(f"Total number of patch employees: {len(patchEmpleados)}")
+import openpyxl
+
+def generarExcel(empleados, nombreArchivo):
+
+    workbook = openpyxl.Workbook()
+    sheet = workbook.active
+
+    # Escribir encabezados
+    encabezados = list(empleados[0].__dict__.keys())
+    sheet.append(encabezados)
+
+    # Escribir datos
+    for empleado in empleados:
+        fila = [str(getattr(empleado, header)) for header in encabezados]
+        sheet.append(fila)
+
+    workbook.save(nombreArchivo)
+
+def generarExcels():
+    generarExcel(postEmpleados, "empleados_nuevos.xlsx")
+    generarExcel(patchEmpleados, "empleados_modificados.xlsx")
 
 
 def postEmpleadosBC():
@@ -47,42 +110,37 @@ def postEmpleadosBC():
         It then calls the business_central_request function (with a POST request) 
         to create the new employee in Business Central, passing the data dictionary as the request body. 
         The function includes error handling and prints success/failure messages for each employee creation attempt. """
-    # for empleado in empleados:
-    #     try:
-    #         data = {
-    #             "No": empleado.CodigoEmpleado,
-    #             "Name": empleado.NombreEmpleado,
-    #             "First_Family_Name": empleado.PrimerApellidoEmpleado,
-    #             "Last_Family_Name": empleado.SegundoApellidoEmpleado,
-    #             "Address": empleado.DireccionCompleta,
-    #             "PostCode": empleado.CodigoPostal,
-    #             "City": empleado.Municipio,
-    #             "County": empleado.Provincia,
-    #             "PhoneNo": empleado.Telefono,
-    #             "MobilePhoneNo": empleado.TelefonoMovil,
-    #             "E_Mail": empleado.EMail1,
-    #             "BirthDate": empleado.FechaNacimiento,
-    #             "SSN": empleado.Dni,
-    #             "IBAN": empleado.IBANReceptor,
-    #             "Gender": empleado.Sexo,
-    #             "JobTitle": "Empleado",
-    #             "StartDate": empleado.FechaInicioContrato,
-    #             "EndDate": empleado.FechaFinalContrato,
-    #             "Nationality": empleado.SiglaNacion
-    #         }
-    #         response = business_central_request(data=data)
-    #         if response:
-    #             print(f"Empleado {empleado.NombreEmpleado} creado correctamente en Business Central.")
-    #         else:
-    #             print(f"Error al crear el empleado {empleado.NombreEmpleado} en Business Central.")
-    #     except Exception as e:
-    #         print(f"Error al procesar el empleado {empleado.NombreEmpleado}: {e}")
-    data = {
-    "No": "0003",
-    "Name": "John",
-    "First_Family_Name": "Does"
-    }
-    business_central_request(data=data)
+    for empleado in postEmpleados:
+        try:
+            data = {
+                "No": empleado.CodigoEmpleado,
+                "Name": empleado.NombreEmpleado,
+                "First_Family_Name": empleado.PrimerApellidoEmpleado,
+                "Last_Family_Name": empleado.SegundoApellidoEmpleado,
+                "Address": empleado.DireccionCompleta,
+                "PostCode": empleado.CodigoPostal,
+                "City": empleado.Municipio,
+                "County": empleado.Provincia,
+                "PhoneNo": empleado.Telefono,
+                "MobilePhoneNo": empleado.TelefonoMovil,
+                "E_Mail": empleado.EMail1,
+                "BirthDate": empleado.FechaNacimiento,
+                "CifNif_MPX_LDR": empleado.Dni,
+                "Bank_Account_No": empleado.IBANReceptor,
+                "Gender": empleado.Sexo,
+                "Employment_Date": empleado.FechaInicioContrato,
+                "Termination_Date": empleado.FechaFinalContrato,
+                "Country_Region_Code": empleado.SiglaNacion,
+                "Social_Security_No": empleado.ProvNumSoe
+            }
+            response = business_central_request(data=data)
+            if response:
+                print(f"Empleado {empleado.NombreEmpleado} creado correctamente en Business Central.")
+            else:
+                print(f"Error al crear el empleado {empleado.NombreEmpleado} en Business Central.")
+        except Exception as e:
+            print(f"Error al procesar el empleado {empleado.NombreEmpleado}: {e}")
+
 
 
 
