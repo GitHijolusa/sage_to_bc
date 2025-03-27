@@ -1,5 +1,5 @@
 import json
-import pyodbc
+import pymssql
 import setup
 from datetime import datetime
 
@@ -9,24 +9,22 @@ from empleado import Empleado
 
 
 def getEmpleadosDb():
-    conn_str = (
-    r'DRIVER={ODBC Driver 17 for SQL Server};'
-    f'SERVER={setup.ipDb};'
-    f'DATABASE={setup.db};'
-    f'UID={setup.userDb};'
-    f'PWD={setup.passwordDb};'
-    )
-    conn = pyodbc.connect(conn_str)
-    cursor = conn.cursor()
-    rows =''
+    try:
+        conn = pymssql.connect(server=setup.ipDb, user=setup.userDb, password=setup.passwordDb, database=setup.db)
+        cursor = conn.cursor(as_dict=True)
+        rows =''
+    except pymssql.Error as e:
+        print(f"Error connecting to the database: {e}")
+        return []
 
     try:
-        cursor.execute(setup.query)
-        rows = cursor.fetchall()
-    except pyodbc.Error as ex:
-        sqlstate = ex.args[0]
-        if sqlstate == '28000':
-            print("Authentication error. Check your username and password.")
+        cursor.execute(setup.query)        
+        rows = cursor.fetchall()        
+    except pymssql.Error as ex:
+        if '28000' in str(ex):
+            print(f"Authentication error: {ex}")
+        elif '18456' in str(ex):
+            print(f"Login failed for user: {ex}")
         else:
             print(f"Database error: {ex}")
         
@@ -34,11 +32,10 @@ def getEmpleadosDb():
     for row in rows:
 
         json_row = {}
-        for i, col in enumerate(cursor.description):
-            value = row[i]
+        for key, value in row.items():
             if isinstance(value, datetime):
                 value = value.isoformat()
-            json_row[col[0]] = value
+            json_row[key] = value
 
         # print(json.dumps(json_row, indent=4))
         # Create an Empleado object from each row
@@ -57,7 +54,7 @@ def getEmpleadosDb():
 
 
     cursor.close()
-    conn.close()
+    conn.close()    
     print(f"Total number of employees: {len(empleados)}")
     for empleado in empleados:
         print(empleado)

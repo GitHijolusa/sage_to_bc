@@ -7,7 +7,7 @@ import setup
 # Configurar el registro de errores
 logging.basicConfig(filename='business_central_api.log', level=logging.ERROR)
 
-def business_central_request(url=setup.urlEmpleados, username=setup.usernameBC, password=setup.passwordBC, data=None, method='POST'):
+def business_central_request(url=setup.urlEmpleados, username=setup.usernameBC, password=setup.passwordBC, data=None, method='POST', etag=None, id=None):
     """
     Realiza una solicitud a un servicio web de Business Central.
 
@@ -33,7 +33,13 @@ def business_central_request(url=setup.urlEmpleados, username=setup.usernameBC, 
         elif method == 'POST':
             response = requests.post(url, headers=headers, auth=auth, data=json.dumps(data))
             print(response.text)
-            print(response.status_code)
+            print(response.status_code)        
+        elif method == 'PATCH':
+            headers['If-Match'] = etag
+            response = requests.patch(f"{url}('{id}')", headers=headers, auth=auth, data=json.dumps(data))
+            print(f"Response text: {response.text}")            
+            print(f"Response status code: {response.status_code}")            
+
         else:
             raise ValueError("Método HTTP inválido. Debe ser 'GET' o 'POST'")
 
