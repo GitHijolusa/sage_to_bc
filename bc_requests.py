@@ -4,10 +4,9 @@ import json
 import logging
 import setup
 
-# Configurar el registro de errores
 logging.basicConfig(filename='business_central_api.log', level=logging.ERROR)
 
-def business_central_request(url=setup.urlEmpleados, username=setup.usernameBC, password=setup.passwordBC, data=None, method='POST', etag=None, id=None):
+def business_central_request(url=None, username=setup.usernameBC, password=setup.passwordBC, data=None, method='POST', etag=None, id=None):
     """
     Realiza una solicitud a un servicio web de Business Central.
 
@@ -19,6 +18,7 @@ def business_central_request(url=setup.urlEmpleados, username=setup.usernameBC, 
                                  Por defecto es None.
         method (str, optional): El método HTTP ('GET' o 'POST'). 
                                  Por defecto es 'POST'.
+        url (str, optional): La URL del servicio web.
 
     Returns:
         dict: La respuesta JSON del servidor si la solicitud es exitosa.
@@ -28,6 +28,9 @@ def business_central_request(url=setup.urlEmpleados, username=setup.usernameBC, 
     auth = HttpNtlmAuth(username, password)
 
     try:
+        if url is None:
+            raise ValueError("URL is required.")
+        
         if method == 'GET':
             response = requests.get(url, headers=headers, auth=auth)
         elif method == 'POST':
