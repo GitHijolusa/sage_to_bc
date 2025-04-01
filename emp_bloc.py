@@ -1,13 +1,20 @@
 # from db_query import empleados
 from bc_requests import business_central_request
+
+import setup
 import db_query
 from datetime import datetime
 from empleado import Empleado
-# import setup
+# import se
 postEmpleados = []
+postEmpleadosCentro = []
 patchEmpleados = []
 empleadosDB = []
 empleadosBc = []
+empleadoCentroMaquina = []
+
+#Crear una nuueva lista de empleados centro maquinas y comparar que empleados faltan con las otras dos listas
+#Mirar los codigos de empleados si son de 4 o 5 digitos para que tengan todos los mismos numeros
 
 def getEmpleadosBC():
     """
@@ -23,7 +30,7 @@ def getEmpleadosBC():
     """
     
     try:
-        responseData = business_central_request(method='GET')
+        responseData = business_central_request(url=setup.urlEmpleados, method='GET')
         print(responseData)
         if responseData:
             for item in responseData['value']:
@@ -59,6 +66,26 @@ def getEmpleadosBC():
         print(empleado)
     return empleadosBc
 
+def getEmpleadosCentroMaquina():
+        
+    try:
+        responseData = business_central_request(url=setup.urlEmpleadosCentro, method='GET')
+        print(responseData)
+        if responseData:
+            for item in responseData['value']:
+                empleado = Empleado()
+                empleado.CodigoEmpleado = item.get('No')
+                empleado.NombreEmpleado = item.get('Name')
+                # ... asignar otros atributos si es necesario ...
+
+                empleadoCentroMaquina.append(empleado)
+
+    except TypeError as e:
+        print(f"Error: {e}")
+    # print (f"Empleados en BC: {len(listaEmpleadosBC)} ")
+
+    return empleadoCentroMaquina
+
 def getEmpleadosDB():
     global empleadosDB
     empleadosDB = db_query.getEmpleadosDb()
@@ -66,6 +93,7 @@ def getEmpleadosDB():
 def getdiffEmpleados():
     print(f"empleados en BC: {len(empleadosBc)}")
     print(f"empleados en DB: {len(empleadosDB)}")
+    print(f"empleados en centro maquina: {len(empleadoCentroMaquina)}")
 
     for empleadoDB in empleadosDB:
         if empleadoDB.Sexo == "Hombre":
@@ -89,8 +117,18 @@ def getdiffEmpleados():
         if not found:
             postEmpleados.append(empleadoDB)
 
-    print(f"Total number of new employees: {len(postEmpleados)}")
+    for empleadoDB in empleadosDB:
+        found = False
+        for empleadoCentro in empleadoCentroMaquina:
+                if empleadoDB.CodigoEmpleado == empleadoCentro.CodigoEmpleado:
+                    found = True
+                    break
+        if not found:
+            postEmpleadosCentro.append(empleadoDB)
 
+    print(f"Total number of new employees in centro maquina: {len(postEmpleadosCentro)}")
+
+    print(f"Total number of new employees: {len(postEmpleados)}")
     
     print(f"Total number of patch employees: {len(patchEmpleados)}")
 import openpyxl
@@ -158,8 +196,35 @@ def postEmpleadosBC():
             else:
                 data["Birth_Date"] = None
             if empleado.CodigoEmpleado not in empleados_codigos or len(empleados_codigos) == 0:
-                response = business_central_request(data=data)
-                if response:
+                response = business_central_request(url=setup.urlEmpleados, method='POST', data=data)
+                if response is not None:
+                    print(f"Empleado {empleado.NombreEmpleado} con codigo {empleado.CodigoEmpleado} creado correctamente en Business Central.")
+                else:
+                    print(f"Error al crear el empleado {empleado.NombreEmpleado} en Business Central.")
+            else:
+                print(f"El empleado {empleado.NombreEmpleado} con código {empleado.CodigoEmpleado} ya existe en Business Central.")
+            
+        except Exception as e:
+            print(f"Error al procesar el empleado {empleado.NombreEmpleado}: {e}")
+
+
+def postEmpleadosCentroMaquina():
+    
+    empleados_codigos = [empleado.CodigoEmpleado for empleado in empleadoCentroMaquina]
+    
+
+    for empleado in postEmpleadosCentro:
+        try:
+            data = {
+                "No": empleado.CodigoEmpleado,
+                "Name": empleado.NombreEmpleado,
+                "Direct_Unit_Cost": 0.00400000000000000000,
+                "Indirect_Cost_Percent": 0
+            }
+
+            if empleado.CodigoEmpleado not in empleados_codigos or len(empleados_codigos) == 0:
+                response = business_central_request(url=setup.urlEmpleadosCentro, method='POST', data=data)
+                if response is not None:
                     print(f"Empleado {empleado.NombreEmpleado} con codigo {empleado.CodigoEmpleado} creado correctamente en Business Central.")
                 else:
                     print(f"Error al crear el empleado {empleado.NombreEmpleado} en Business Central.")
@@ -207,7 +272,7 @@ def patchEmpleadosBC():
             else:
                 data["Birth_Date"] = None
 
-            response = business_central_request(method='PATCH', data=data, etag=empleado.odata_etag, id=empleado.CodigoEmpleado)
+            response = business_central_request(url=setup.urlEmpleados, method='PATCH', data=data, etag=empleado.odata_etag, id=empleado.CodigoEmpleado)
             if response:
                 print(f"Empleado {empleado.NombreEmpleado} actualizado correctamente en Business Central.")
             else:
