@@ -5,7 +5,7 @@ import setup
 import db_query
 from datetime import datetime
 from empleado import Empleado
-# import se
+
 postEmpleados = []
 postEmpleadosCentro = []
 patchEmpleados = []
@@ -13,10 +13,15 @@ empleadosDB = []
 empleadosBc = []
 empleadoCentroMaquina = []
 
-#Crear una nuueva lista de empleados centro maquinas y comparar que empleados faltan con las otras dos listas
-#Mirar los codigos de empleados si son de 4 o 5 digitos para que tengan todos los mismos numeros
-
 def getEmpleadosBC():
+    """
+    Retrieves employee data from Business Central.
+
+    This function sends a GET request to the Business Central API to retrieve a list of employees.
+    It then parses the JSON response and creates Empleado objects for each employee found.
+    The employee data is stored in the global empleadosBc list.
+
+    """
     """
     Obtiene los códigos de empleado de Business Central.
 
@@ -67,6 +72,14 @@ def getEmpleadosBC():
     return empleadosBc
 
 def getEmpleadosCentroMaquina():
+    """
+    Retrieves employee data from the "Centro Maquina" endpoint in Business Central.
+
+    This function sends a GET request to the Business Central API to retrieve a list of employees
+    from the "Centro Maquina" endpoint. It then parses the JSON response and creates Empleado
+    objects for each employee found. The employee data is stored in the global
+    empleadoCentroMaquina list.
+    """
         
     try:
         responseData = business_central_request(url=setup.urlEmpleadosCentro, method='GET')
@@ -87,10 +100,22 @@ def getEmpleadosCentroMaquina():
     return empleadoCentroMaquina
 
 def getEmpleadosDB():
+    """
+    Retrieves employee data from the database.
+
+    This function calls the getEmpleadosDb function from the db_query module to retrieve
+    employee data from the database. The retrieved data is stored in the global empleadosDB list.
+    """
     global empleadosDB
     empleadosDB = db_query.getEmpleadosDb()
 
 def getdiffEmpleados():
+    """
+    Compares employee data between the database, Business Central, and Centro Maquina.
+
+    This function compares the employee data in empleadosDB, empleadosBc, and empleadoCentroMaquina
+    to identify new employees, modified employees, and employees that need to be added to Centro Maquina.
+    """
     print(f"empleados en BC: {len(empleadosBc)}")
     print(f"empleados en DB: {len(empleadosDB)}")
     print(f"empleados en centro maquina: {len(empleadoCentroMaquina)}")
@@ -134,6 +159,14 @@ def getdiffEmpleados():
 import openpyxl
 
 def generarExcel(empleados, nombreArchivo):
+    """
+    Generates an Excel file from a list of employee objects.
+
+    Args:
+        empleados (list): A list of Empleado objects.
+        nombreArchivo (str): The name of the Excel file to be created.
+
+    """
 
     workbook = openpyxl.Workbook()
     sheet = workbook.active
@@ -153,17 +186,28 @@ def generarExcel(empleados, nombreArchivo):
     workbook.save(nombreArchivo)
 
 def generarExcels():
+    """
+    Generates Excel files for new and modified employees.
+
+    This function calls generarExcel to create two Excel files: one for new employees and one for modified employees.
+    """
     generarExcel(postEmpleados, "empleados_nuevos.xlsx")
     generarExcel(patchEmpleados, "empleados_modificados.xlsx")
-
+    generarExcel(empleadoCentroMaquina, "empleados_centro_maquina.xlsx")
+    
 
 def postEmpleadosBC():
     """ This function iterates through the list of Empleado objects retrieved by getEmpleadosDB().
       For each employee, it constructs a dictionary data containing the employee's information,
-        mapping field names from the database to corresponding fields in Business Central. 
-        It then calls the business_central_request function (with a POST request) 
-        to create the new employee in Business Central, passing the data dictionary as the request body. 
-        The function includes error handling and prints success/failure messages for each employee creation attempt. """
+    Posts new employees to Business Central.
+
+    This function iterates through the list of Empleado objects in postEmpleados.
+    For each employee, it constructs a dictionary data containing the employee's information,
+    mapping field names from the database to corresponding fields in Business Central.
+    It then calls the business_central_request function (with a POST request)
+    to create the new employee in Business Central, passing the data dictionary as the request body.
+    """
+        
     empleados_codigos = [empleado.CodigoEmpleado for empleado in empleadosBc]
 
     for empleado in postEmpleados:
@@ -209,6 +253,15 @@ def postEmpleadosBC():
 
 
 def postEmpleadosCentroMaquina():
+    """
+    Posts new employees to the "Centro Maquina" endpoint in Business Central.
+
+    This function iterates through the list of Empleado objects in postEmpleadosCentro.
+    For each employee, it constructs a dictionary data containing the employee's information,
+    mapping field names from the database to corresponding fields in Business Central.
+    It then calls the business_central_request function (with a POST request)
+    to create the new employee in Business Central, passing the data dictionary as the request body.
+    """
     
     empleados_codigos = [empleado.CodigoEmpleado for empleado in empleadoCentroMaquina]
     
@@ -236,12 +289,16 @@ def postEmpleadosCentroMaquina():
 
         
 def patchEmpleadosBC():
-    """ This function iterates through the list of Empleado objects that need to be updated in Business Central.
-        For each employee, it constructs a dictionary data containing the employee's information,
-        mapping field names from the database to corresponding fields in Business Central.
-        It then calls the business_central_request function (with a PATCH request)
-        to update the employee in Business Central, passing the data dictionary as the request body.
-        The function includes error handling and prints success/failure messages for each employee update attempt. """
+    """
+    Updates existing employees in Business Central.
+
+    This function iterates through the list of Empleado objects that need to be updated in Business Central.
+    For each employee, it constructs a dictionary data containing the employee's information,
+    mapping field names from the database to corresponding fields in Business Central.
+    It then calls the business_central_request function (with a PATCH request)
+    to update the employee in Business Central, passing the data dictionary as the request body.
+    The function includes error handling and prints success/failure messages for each employee update attempt. 
+    """
     for empleado in patchEmpleados:
         try:
             data = {
