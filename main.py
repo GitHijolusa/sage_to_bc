@@ -7,13 +7,14 @@ import bc_requests
 
 load_setup_from_json()
 emp_bloc.getEmpleadosDB()
+emp_bloc.getEmpleadosCentroMaquina()
 emp_bloc.getEmpleadosBC()
 emp_bloc.getdiffEmpleados()
-emp_bloc.generarExcels()
-
+#emp_bloc.generarExcels()
 
 
 emp_bloc.postEmpleadosBC()
+emp_bloc.postEmpleadosCentroMaquina()
 emp_bloc.patchEmpleadosBC()
 
 

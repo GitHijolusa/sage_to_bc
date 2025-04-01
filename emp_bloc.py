@@ -1,7 +1,6 @@
 # from db_query import empleados
-from bc_requests import business_central_request
-
 import setup
+from bc_requests import business_central_request
 import db_query
 from datetime import datetime
 from empleado import Empleado
@@ -35,7 +34,7 @@ def getEmpleadosBC():
     """
     
     try:
-        responseData = business_central_request(url=setup.urlEmpleados, method='GET')
+        responseData = business_central_request(url=setup.urlEmpleados, method='GET')     
         print(responseData)
         if responseData:
             for item in responseData['value']:
@@ -62,7 +61,7 @@ def getEmpleadosBC():
                 empleado.odata_etag = item.get('@odata.etag')
                 # ... asignar otros atributos si es necesario ...
 
-                empleadosBc.append(empleado)
+                empleadosBc.append(empleado)                
 
     except TypeError as e:
         print(f"Error: {e}")

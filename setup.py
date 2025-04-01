@@ -1,9 +1,8 @@
 import json
 import os
 
-
-urlEmpleados = "http://192.168.1.231:7048/BC_Test/ODataV4/Company('AGRICOLA%20VILLENA%20SL')/Empleados"  # Replace with your actual endpoint
 urlEmpleadosCentro = "http://192.168.1.231:7048/BC_Test/ODataV4/Company(%27AGRICOLA%20VILLENA%20SL%27)/CM"
+urlEmpleados = "http://192.168.1.231:7048/BC_Test/ODataV4/Company('AGRICOLA%20VILLENA%20SL')/Empleados"  # Replace with your actual endpoint
 usernameBC = "SQL-NAV-PRE\\ALFREDO.BLANCO"  # Replace with your Business Central username. Note the double backslash.
 passwordBC = "Rol62357"  # Replace with your Business Central password
 
@@ -98,7 +97,7 @@ def load_setup_from_json(filepath=os.path.join(os.path.dirname(__file__), "setup
             data = json.load(f)
             global urlEmpleados, urlEmpleadosCentro, usernameBC, passwordBC, userDb, passwordDb, ipDb, db, query
             urlEmpleados = data.get('urlEmpleados', urlEmpleados)  
-            urlEmpleadosCentroMaquina = data.get('urlEmpleados', urlEmpleadosCentro)           
+            urlEmpleadosCentro = data.get('urlEmpleadosCentroMaquina', urlEmpleadosCentro)           
             usernameBC = data.get('usernameBC', usernameBC)            
             passwordBC = data.get('passwordBC', passwordBC)            
             userDb = data.get('userDb', userDb)            
