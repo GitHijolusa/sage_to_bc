@@ -1,97 +1,19 @@
 import json
 import os
 
-urlEmpleadosCentro = "http://192.168.1.231:7048/BC_Test/ODataV4/Company(%27AGRICOLA%20VILLENA%20SL%27)/CM"
-urlEmpleados = "http://192.168.1.231:7048/BC_Test/ODataV4/Company('AGRICOLA%20VILLENA%20SL')/Empleados"  # Replace with your actual endpoint
-usernameBC = "SQL-NAV-PRE\\ALFREDO.BLANCO"  # Replace with your Business Central username. Note the double backslash.
-passwordBC = "Rol62357"  # Replace with your Business Central password
-
-userDb= 'alfredo.blanco'
-passwordDb = 'Rol62357'
-ipDb = '192.168.1.221'
-db = 'LOGIC'
-
-query="""
-SELECT DISTINCT 
-    p.[SiglaNacion],
-    p.[Dni],
-    n.CodigoEmpleado,
-    [NombreEmpleado],
-    [ProvNumSoe],
-    [PrimerApellidoEmpleado],
-    [SegundoApellidoEmpleado],
-    pd.[CodigoPostal],
-    pd.DireccionCompleta,
-    pd.[Telefono],
-    pd.[TelefonoMovil],
-    pd.[Municipio],
-    pd.[Provincia],
-    [Sexo],
-    [FechaNacimiento],
-    p.[EMail1],
-    [FechaInicioContrato],
-    [FechaFinalContrato],
-    co.[IBANReceptor]
-FROM 
-    [LOGIC].[dbo].[Personas] AS p
-JOIN (
-    SELECT 
-        Dni, 
-        CodigoEmpleado, 
-        FechaInicioContrato,
-        FechaFinalContrato,
-        ROW_NUMBER() OVER (PARTITION BY CodigoEmpleado ORDER BY FechaInicioContrato DESC) AS rn 
-    FROM 
-        dbo.EmpleadoNomina
-) AS n ON p.Dni = n.Dni AND n.rn = 1
-LEFT JOIN (
-    SELECT 
-        CodigoEmpleado, 
-        IBANReceptor,
-        ROW_NUMBER() OVER (PARTITION BY CodigoEmpleado ORDER BY FechaAlta DESC) AS rn 
-    FROM 
-        dbo.EmpleadoCobro
-) AS co ON n.CodigoEmpleado = co.CodigoEmpleado AND co.rn = 1
-LEFT JOIN (
-    SELECT 
-        [Dni]
-        ,[ViaPublica]
-        ,[Numero1]
-        ,[Numero2]
-        ,[Escalera]
-        ,[Piso]
-        ,[Puerta]
-        ,[Letra]
-        ,[CodigoPostal]
-        ,[Telefono]
-        ,[TelefonoMovil]
-        ,[Municipio]
-        ,[Provincia]
-        ,[IdDomicilio]
-        ,CASE 
-            WHEN [ViaPublica] IS NOT NULL THEN [ViaPublica] + ' ' ELSE '' END +
-            CASE 
-            WHEN [Numero1] IS NOT NULL THEN [Numero1] + ' ' ELSE '' END +
-            CASE 
-            WHEN [Numero2] IS NOT NULL THEN [Numero2] + ' ' ELSE '' END +
-            CASE 
-            WHEN [Escalera] IS NOT NULL THEN [Escalera] + ' ' ELSE '' END +
-            CASE 
-            WHEN [Piso] IS NOT NULL THEN [Piso] + ' ' ELSE '' END +
-            CASE 
-            WHEN [Puerta] IS NOT NULL THEN [Puerta] + ' ' ELSE '' END +
-            CASE 
-            WHEN [Letra] IS NOT NULL THEN [Letra] + ' ' ELSE '' END AS DireccionCompleta,
-        ROW_NUMBER() OVER (PARTITION BY [Dni] ORDER BY [IdDomicilio] DESC) AS RowNum
-    FROM [LOGIC].[dbo].[PersonasDomicilios]
-) AS pd ON p.Dni = pd.Dni AND pd.RowNum = 1
-ORDER BY 
-    n.CodigoEmpleado
-"""
+urlEmpleados = None
+urlEmpleadosCentro = None
+usernameBC = None
+passwordBC = None
+userDb = None
+passwordDb = None
+ipDb = None
+db = None
+query = None
 
 def load_setup_from_json(filepath=os.path.join(os.path.dirname(__file__), "setup.json")):
     
-    rutaJson = "setup.json"
+    rutaJson = "dist/setup.json"
     try:
         with open(rutaJson, 'r') as f:
             data = json.load(f)
@@ -112,3 +34,5 @@ def load_setup_from_json(filepath=os.path.join(os.path.dirname(__file__), "setup
         print("Error: Invalid JSON format in json.")
     except Exception as e:
         print(f"An error occurred: {e}")
+        
+load_setup_from_json()
