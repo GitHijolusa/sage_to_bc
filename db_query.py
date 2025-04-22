@@ -1,16 +1,12 @@
 import json
 import pymssql
-import setup
 from datetime import datetime
-
 from empleado import Empleado
-
-
-
+from setup import ipDb, userDb, passwordDb, db, query
 
 def getEmpleadosDb():
     try:
-        conn = pymssql.connect(server=setup.ipDb, user=setup.userDb, password=setup.passwordDb, database=setup.db)
+        conn = pymssql.connect(server=ipDb, user=userDb, password=passwordDb, database=db)
         cursor = conn.cursor(as_dict=True)
         rows =''
     except pymssql.Error as e:
@@ -18,7 +14,7 @@ def getEmpleadosDb():
         return []
 
     try:
-        cursor.execute(setup.query)        
+        cursor.execute(query)        
         rows = cursor.fetchall()        
     except pymssql.Error as ex:
         if '28000' in str(ex):
