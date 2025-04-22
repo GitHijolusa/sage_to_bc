@@ -1,9 +1,9 @@
 # from db_query import empleados
-import setup
 from bc_requests import business_central_request
 import db_query
 from datetime import datetime
 from empleado import Empleado
+from setup import urlEmpleados, urlEmpleadosCentro
 
 postEmpleados = []
 postEmpleadosCentro = []
@@ -34,7 +34,7 @@ def getEmpleadosBC():
     """
     
     try:
-        responseData = business_central_request(url=setup.urlEmpleados, method='GET')     
+        responseData = business_central_request(url=urlEmpleados, method='GET')
         print(responseData)
         if responseData:
             for item in responseData['value']:
@@ -80,8 +80,8 @@ def getEmpleadosCentroMaquina():
     empleadoCentroMaquina list.
     """
         
-    try:
-        responseData = business_central_request(url=setup.urlEmpleadosCentro, method='GET')
+    try:        
+        responseData = business_central_request(url=urlEmpleadosCentro, method='GET')
         print(responseData)
         if responseData:
             for item in responseData['value']:
@@ -119,27 +119,28 @@ def getdiffEmpleados():
     print(f"empleados en DB: {len(empleadosDB)}")
     print(f"empleados en centro maquina: {len(empleadoCentroMaquina)}")
 
+
     for empleadoDB in empleadosDB:
-        if empleadoDB.Sexo == "Hombre":
-            empleadoDB.Sexo = "Male"
-        elif empleadoDB.Sexo == "Mujer":
-            empleadoDB.Sexo = "Female"
-            
+        if empleadoDB.Sexo == "Hombre":            
+            empleadoDB.Sexo = "Male"            
+        elif empleadoDB.Sexo == "Mujer":            
+            empleadoDB.Sexo = "Female"            
+
     for empleadoDB in empleadosDB:
         found = False
         for empleadoBC in empleadosBc:
-                if empleadoDB.__dict__ != empleadoBC.__dict__ :
-                    empleadoDB.odata_etag = empleadoBC.odata_etag
-                    empleadoDB.CodigoEmpleado = empleadoBC.CodigoEmpleado                    
+            if empleadoDB.CodigoEmpleado == empleadoBC.CodigoEmpleado:
+                if empleadoDB.__dict__ != empleadoBC.__dict__ :                    
+                    
+                    empleadoDB.odata_etag = empleadoBC.odata_etag                    
                     if empleadoDB.CodigoEmpleado not in [emp.CodigoEmpleado for emp in patchEmpleados]:
                         patchEmpleados.append(empleadoDB)
-                    found = True
-                    break
-                elif empleadoDB.CodigoEmpleado == empleadoBC.CodigoEmpleado:
-                    found = True
-                    break
+                found = True
+                break
+        
         if not found:
             postEmpleados.append(empleadoDB)
+    
 
     for empleadoDB in empleadosDB:
         found = False
@@ -150,7 +151,8 @@ def getdiffEmpleados():
         if not found:
             postEmpleadosCentro.append(empleadoDB)
 
-    print(f"Total number of new employees in centro maquina: {len(postEmpleadosCentro)}")
+    #print(f"Total number of new employees in centro maquina: {len(postEmpleadosCentro)}")
+
 
     print(f"Total number of new employees: {len(postEmpleados)}")
     
@@ -239,8 +241,8 @@ def postEmpleadosBC():
             else:
                 data["Birth_Date"] = None
             if empleado.CodigoEmpleado not in empleados_codigos or len(empleados_codigos) == 0:
-                response = business_central_request(url=setup.urlEmpleados, method='POST', data=data)
-                if response is not None:
+                response = business_central_request(url=urlEmpleados, method='POST', data=data)
+                if response is not None:                    
                     print(f"Empleado {empleado.NombreEmpleado} con codigo {empleado.CodigoEmpleado} creado correctamente en Business Central.")
                 else:
                     print(f"Error al crear el empleado {empleado.NombreEmpleado} en Business Central.")
@@ -275,8 +277,8 @@ def postEmpleadosCentroMaquina():
             }
 
             if empleado.CodigoEmpleado not in empleados_codigos or len(empleados_codigos) == 0:
-                response = business_central_request(url=setup.urlEmpleadosCentro, method='POST', data=data)
-                if response is not None:
+                response = business_central_request(url=urlEmpleadosCentro, method='POST', data=data)
+                if response is not None:                    
                     print(f"Empleado {empleado.NombreEmpleado} con codigo {empleado.CodigoEmpleado} creado correctamente en Business Central.")
                 else:
                     print(f"Error al crear el empleado {empleado.NombreEmpleado} en Business Central.")
@@ -328,7 +330,7 @@ def patchEmpleadosBC():
             else:
                 data["Birth_Date"] = None
 
-            response = business_central_request(url=setup.urlEmpleados, method='PATCH', data=data, etag=empleado.odata_etag, id=empleado.CodigoEmpleado)
+            response = business_central_request(url=urlEmpleados, method='PATCH', data=data, etag=empleado.odata_etag, id=empleado.CodigoEmpleado)            
             if response:
                 print(f"Empleado {empleado.NombreEmpleado} actualizado correctamente en Business Central.")
             else:
