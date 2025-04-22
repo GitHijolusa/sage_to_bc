@@ -2,11 +2,11 @@ import requests
 from requests_ntlm import HttpNtlmAuth
 import json
 import logging
-import setup
+from setup import usernameBC, passwordBC
 
 logging.basicConfig(filename='business_central_api.log', level=logging.ERROR)
 
-def business_central_request(url=None, username=setup.usernameBC, password=setup.passwordBC, data=None, method='POST', etag=None, id=None):
+def business_central_request(url=None, username=usernameBC, password=passwordBC, data=None, method='POST', etag=None, id=None):
     """
     Realiza una solicitud a un servicio web de Business Central.
 
