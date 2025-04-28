@@ -47,7 +47,10 @@ def getEmpleadosDb():
         elif empleado.Sexo == 2:
             empleado.Sexo = 'Mujer'
 
-
+        if empleado.FechaFinalContrato is None:
+            empleado.estado = "Active"
+        elif empleado.FechaFinalContrato is not None and empleado.FechaFinalContrato < datetime.now().isoformat():
+            empleado.estado = "Inactive"
 
     cursor.close()
     conn.close()    
