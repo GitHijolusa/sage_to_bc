@@ -3,6 +3,7 @@ from requests_ntlm import HttpNtlmAuth
 import json
 import logging
 from setup import usernameBC, passwordBC
+import requests
 
 logging.basicConfig(filename='business_central_api.log', level=logging.ERROR)
 
@@ -33,6 +34,8 @@ def business_central_request(url=None, username=usernameBC, password=passwordBC,
         
         if method == 'GET':
             response = requests.get(url, headers=headers, auth=auth)
+            print(response.text)
+            print(response.status_code) 
         elif method == 'POST':
             response = requests.post(url, headers=headers, auth=auth, data=json.dumps(data))
             print(response.text)

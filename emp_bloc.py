@@ -3,7 +3,7 @@ from bc_requests import business_central_request
 import db_query
 from datetime import datetime
 from empleado import Empleado
-from setup import urlEmpleados, urlEmpleadosCentro
+from setup import urlEmpleados, urlEmpleadosCentro, direct_unit_cost, indirect_cost_percent
 
 postEmpleados = []
 postEmpleadosCentro = []
@@ -59,6 +59,7 @@ def getEmpleadosBC():
                 empleado.SiglaNacion = item.get('Country_Region_Code')
                 empleado.ProvNumSoe = item.get('Social_Security_No')
                 empleado.odata_etag = item.get('@odata.etag')
+                empleado.estado = item.get('Status')
                 # ... asignar otros atributos si es necesario ...
 
                 empleadosBc.append(empleado)                
@@ -88,14 +89,14 @@ def getEmpleadosCentroMaquina():
                 empleado = Empleado()
                 empleado.CodigoEmpleado = item.get('No')
                 empleado.NombreEmpleado = item.get('Name')
-                # ... asignar otros atributos si es necesario ...
+                empleado.estado = item.get('Status')               
+                empleado.direct_unit_cost = item.get('Direct_Unit_Cost')
+                empleado.indirect_cost_percent = item.get('Indirect_Cost_Percent')
 
-                empleadoCentroMaquina.append(empleado)
+                empleadoCentroMaquina.append(empleado)                
 
     except TypeError as e:
         print(f"Error: {e}")
-    # print (f"Empleados en BC: {len(listaEmpleadosBC)} ")
-
     return empleadoCentroMaquina
 
 def getEmpleadosDB():
@@ -119,40 +120,39 @@ def getdiffEmpleados():
     print(f"empleados en DB: {len(empleadosDB)}")
     print(f"empleados en centro maquina: {len(empleadoCentroMaquina)}")
 
-
     for empleadoDB in empleadosDB:
         if empleadoDB.Sexo == "Hombre":            
             empleadoDB.Sexo = "Male"            
         elif empleadoDB.Sexo == "Mujer":            
-            empleadoDB.Sexo = "Female"            
-
-    for empleadoDB in empleadosDB:
-        found = False
+            empleadoDB.Sexo = "Female" 
+            
         for empleadoBC in empleadosBc:
-            if empleadoDB.CodigoEmpleado == empleadoBC.CodigoEmpleado:
-                if empleadoDB.__dict__ != empleadoBC.__dict__ :                    
-                    
-                    empleadoDB.odata_etag = empleadoBC.odata_etag                    
-                    if empleadoDB.CodigoEmpleado not in [emp.CodigoEmpleado for emp in patchEmpleados]:
-                        patchEmpleados.append(empleadoDB)
+            if empleadoDB.__dict__ != empleadoBC.__dict__ :                    
+                empleadoDB.odata_etag = empleadoBC.odata_etag
+                empleadoDB.CodigoEmpleado = empleadoBC.CodigoEmpleado                                   
+                if empleadoDB.CodigoEmpleado not in [emp.CodigoEmpleado for emp in patchEmpleados]:
+                    patchEmpleados.append(empleadoDB)
+                found = True
+                break
+            elif empleadoDB.CodigoEmpleado == empleadoBC.CodigoEmpleado:
                 found = True
                 break
         
         if not found:
             postEmpleados.append(empleadoDB)
     
-
+    
     for empleadoDB in empleadosDB:
-        found = False
+        found_centro = False
         for empleadoCentro in empleadoCentroMaquina:
-                if empleadoDB.CodigoEmpleado == empleadoCentro.CodigoEmpleado:
-                    found = True
-                    break
-        if not found:
+            if empleadoDB.CodigoEmpleado == empleadoCentro.CodigoEmpleado:
+                found_centro = True
+                break
+        
+        if not found_centro and empleadoDB.estado == "Active":
             postEmpleadosCentro.append(empleadoDB)
 
-    #print(f"Total number of new employees in centro maquina: {len(postEmpleadosCentro)}")
-
+    print(f"Total number of new employees in centro maquina: {len(postEmpleadosCentro)}")
 
     print(f"Total number of new employees: {len(postEmpleados)}")
     
@@ -229,7 +229,9 @@ def postEmpleadosBC():
                 "E_Mail": empleado.EMail1,
                 "Birth_Date": empleado.FechaNacimiento,
                 "Social_Security_No": empleado.ProvNumSoe,
-                "Bank_Account_No": empleado.IBANReceptor
+                "Bank_Account_No": empleado.IBANReceptor,
+                "Status": empleado.estado
+
             }
             if empleado.Sexo == "Hombre":
                 data["Gender"] = "Male"
@@ -271,9 +273,10 @@ def postEmpleadosCentroMaquina():
         try:
             data = {
                 "No": empleado.CodigoEmpleado,
-                "Name": empleado.NombreEmpleado,
-                "Direct_Unit_Cost": 0.00400000000000000000,
-                "Indirect_Cost_Percent": 0
+                "Name":empleado.NombreEmpleado,
+                "Status": empleado.estado,
+                "Direct_Unit_Cost": direct_unit_cost,
+                "Indirect_Cost_Percent": indirect_cost_percent
             }
 
             if empleado.CodigoEmpleado not in empleados_codigos or len(empleados_codigos) == 0:
@@ -318,7 +321,8 @@ def patchEmpleadosBC():
                 "E_Mail": empleado.EMail1,
                 "Birth_Date": empleado.FechaNacimiento,
                 "Social_Security_No": empleado.ProvNumSoe,
-                "Bank_Account_No": empleado.IBANReceptor
+                "Bank_Account_No": empleado.IBANReceptor,
+                "Status": empleado.estado
             }
             if empleado.Sexo == "Hombre":
                 data["Gender"] = "Male"
