@@ -20,6 +20,7 @@ class Empleado:
         self.IBANReceptor = None
         self.Dni = None
         self.odata_etag = None
+        self.estado = None
     def __str__(self):
         return f"""
         SiglaNacion: {self.SiglaNacion}
@@ -41,6 +42,7 @@ class Empleado:
         FechaInicioContrato: {self.FechaInicioContrato}
         FechaFinalContrato: {self.FechaFinalContrato}
         IBANReceptor: {self.IBANReceptor}
+        Estado: {self.estado}
         """
 
         
