@@ -1,6 +1,6 @@
 {
-    "urlEmpleados": "http://192.168.1.230:7048/BC/ODataV4/Company('AGRICOLA%20VILLENA%20SL')/empleados",
-    "urlEmpleadosCentro": "http://192.168.1.231:7048/BC_Test/ODataV4/Company(%27AGRICOLA%20VILLENA%20SL%27)/CM",
+    "urlEmpleados": "http://192.168.1.230:7048/BC/ODataV4/Company(%27AGRICOLA%20VILLENA%20SL%27)/empleados",
+    "urlEmpleadosCentro": "http://192.168.1.230:7048/BC/ODataV4/Company(%27AGRICOLA%20VILLENA%20SL%27)/FichaCM",
     "usernameBC": "AV\\ALFREDO.BLANCO",
     "passwordBC": "Rol62357",
     "userDb": "alfredo.blanco",
