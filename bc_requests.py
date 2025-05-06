@@ -45,7 +45,11 @@ def business_central_request(url=None, username=usernameBC, password=passwordBC,
             response = requests.patch(f"{url}('{id}')", headers=headers, auth=auth, data=json.dumps(data))
             print(f"Response text: {response.text}")            
             print(f"Response status code: {response.status_code}")            
-
+        elif method == 'DELETE':
+            response = requests.delete(f"{url}('{id}')", headers=headers, auth=auth)
+            print(f"Response text: {response.text}")
+            print(f"Response status code: {response.status_code}")
+            
         else:
             raise ValueError("Método HTTP inválido. Debe ser 'GET' o 'POST'")
 

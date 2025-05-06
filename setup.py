@@ -1,21 +1,18 @@
 import json
 import os
+import sys
 
-urlEmpleados = None
-urlEmpleadosCentro = None
-usernameBC = None
-passwordBC = None
-userDb = None
-passwordDb = None
-ipDb = None
-db = None
-query = None
-direct_unit_cost = None
-indirect_cost_percent = None
+def get_resource_path():
+
+    if hasattr(sys, 'frozen'):
+        return os.path.dirname(sys.executable)
+    else:
+        return os.path.dirname(__file__)
 
 def load_setup_from_json():
     
-    rutaJson = "dist/setup.json"
+    rutaJson = os.path.join(get_resource_path(), "dist", "setup.json")
+    
     try:
         with open(rutaJson, 'r') as f:
             data = json.load(f)
@@ -29,8 +26,8 @@ def load_setup_from_json():
             ipDb = data.get('ipDb', ipDb)            
             db = data.get('db', db)            
             query = data.get('query', query)
-            direct_unit_cost = data.get('direct_unit_cost', direct_unit_cost)
-            indirect_cost_percent = data.get('indirect_cost_percent', indirect_cost_percent)
+            direct_unit_cost = data.get('Direct_Unit_Cost', direct_unit_cost)
+            indirect_cost_percent = data.get('Indirect_Cost_Percent', indirect_cost_percent)
         print("Configuración cargada correctamente ")
     except FileNotFoundError:
         print("Error: json not found.")
@@ -39,4 +36,17 @@ def load_setup_from_json():
     except Exception as e:
         print(f"An error occurred: {e}")
         
+urlEmpleados = None
+urlEmpleadosCentro = None
+usernameBC = None
+passwordBC = None
+userDb = None
+passwordDb = None
+ipDb = None
+db = None
+query = None
+direct_unit_cost = None
+indirect_cost_percent = None
+        
+
 load_setup_from_json()

@@ -30,7 +30,7 @@ def getEmpleadosDb():
         json_row = {}
         for key, value in row.items():
             if isinstance(value, datetime):
-                value = value.isoformat()
+                value = value.strftime('%Y-%m-%d')
             json_row[key] = value
 
         # print(json.dumps(json_row, indent=4))
@@ -38,7 +38,7 @@ def getEmpleadosDb():
         empleado = Empleado()
         empleado.__dict__.update(json_row)
 
-        print(f"Processing employee: {empleado.NombreEmpleado}")
+        #print(f"Processing employee: {empleado.NombreEmpleado}")
         #Process empleado object here, for example:
         empleados.append(empleado)
         empleado.CodigoEmpleado = str(empleado.CodigoEmpleado).zfill(5)
@@ -47,10 +47,17 @@ def getEmpleadosDb():
         elif empleado.Sexo == 2:
             empleado.Sexo = 'Mujer'
 
-        if empleado.FechaFinalContrato is None:
+        if empleado.FechaFinalContrato is None or empleado.FechaFinalContrato >= datetime.now().isoformat():
             empleado.estado = "Active"
-        elif empleado.FechaFinalContrato is not None and empleado.FechaFinalContrato < datetime.now().isoformat():
+        else:
             empleado.estado = "Inactive"
+            
+        if empleado.FechaFinalContrato is None:
+            empleado.FechaFinalContrato = None
+            
+        elif empleado.FechaInicioContrato is None:
+            empleado.FechaInicioContrato = None
+
 
     cursor.close()
     conn.close()    
