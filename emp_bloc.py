@@ -170,21 +170,18 @@ def getdiffEmpleados():
                 if empleado_modificado.CodigoEmpleado not in [emp.CodigoEmpleado for emp in patchEmpleados]:
                     patchEmpleados.append(empleado_modificado)
 
+        else:
+            # El empleado no existe en Business Central, lo añadimos a la lista de nuevos empleados
+            postEmpleados.append(empleadoDB)
+            
+            empleados_centro_maquina_dict = {emp.CodigoEmpleado: emp for emp in empleadoCentroMaquina}
+            
+            if empleadoDB.estado == "Active" and empleadoDB.CodigoEmpleado not in empleados_centro_maquina_dict:
+                postEmpleadosCentro.append(empleadoDB)                
 
-    for empleadoBC in empleadosBc:
-        found_centro = False
-        for empleadoCentro in empleadoCentroMaquina:
-            if empleadoBC.CodigoEmpleado == empleadoCentro.CodigoEmpleado:
-                found_centro = True
-                break
-        
-        if empleadoBC.estado == "Active" and not found_centro:
-            postEmpleadosCentro.append(empleadoBC)
-                
-
-    print(f"Total number of new employees in centro maquina: {len(postEmpleadosCentro)}")
-    print(f"Total number of new employees: {len(postEmpleados)}")
-    print(f"Total number of patch employees: {len(patchEmpleados)}")
+    print(f"Empleados nuevos: {len(postEmpleados)}")
+    print(f"Empleados nuevos en centros de maquina: {len(postEmpleadosCentro)}")
+    print(f"Empleados para actualizar datos: {len(patchEmpleados)}")
 import openpyxl
 
 def contar_empleados_activos_db():
@@ -213,8 +210,6 @@ def get_empleado_db(codigo_empleado):
             print(empleado)
             return empleado
     return None
-
-
 
 def generarExcel(empleados, nombreArchivo):
     """
@@ -312,7 +307,7 @@ def postEmpleadosBC():
             if empleado.CodigoEmpleado not in empleados_codigos or len(empleados_codigos) == 0:
                 response = business_central_request(url=urlEmpleados, method='POST', data=data)
                 if response is not None:                    
-                    print(f"Empleado {empleado.NombreEmpleado} con codigo {empleado.CodigoEmpleado} creado correctamente en Business Central.")
+                    print(f"Empleado {empleado.NombreEmpleado} con codigo {empleado.CodigoEmpleado} añadido correctamente a la lista de empleados de BC.")
                 else:
                     print(f"Error al crear el empleado {empleado.NombreEmpleado} en Business Central.")
             else:
@@ -348,7 +343,7 @@ def postEmpleadosCentroMaquina():
             if empleado.CodigoEmpleado not in empleados_codigos or len(empleados_codigos) == 0:
                 response = business_central_request(url=urlEmpleadosCentro, method='POST', data=data)
                 if response is not None:                    
-                    print(f"Empleado {empleado.NombreEmpleado} con codigo {empleado.CodigoEmpleado} creado correctamente en Business Central.")
+                    print(f"Empleado {empleado.NombreEmpleado} con codigo {empleado.CodigoEmpleado} añadido correctamente a la lista de centros de maquina de BC.")
                 else:
                     print(f"Error al crear el empleado {empleado.NombreEmpleado} en Business Central.")
             else:
@@ -413,28 +408,6 @@ def patchEmpleadosBC():
                 print(f"Error al actualizar el empleado {empleado.NombreEmpleado} en Business Central.")
         except Exception as e:
             print(f"Error al procesar el empleado {empleado.NombreEmpleado}: {e}")
-
-def deleteAllEmpleadosBC():
-    """
-    Deletes all employee records from the Business Central web service.
-
-    This function retrieves all employees from Business Central, then iterates through them,
-    sending a DELETE request for each employee to remove them from the system.
-    """
-    empleados = getEmpleadosBC()
-    if empleados:
-        for empleado in empleados:
-            try:
-                # Assuming DELETE operation is supported and the URL structure is similar to PATCH
-                response = business_central_request(url=urlEmpleados, method='DELETE', id=empleado.CodigoEmpleado)
-                if response:
-                    print(f"Empleado {empleado.NombreEmpleado} (ID: {empleado.CodigoEmpleado}) eliminado correctamente de Business Central.")
-                else:
-                    print(f"Error al eliminar el empleado {empleado.NombreEmpleado} (ID: {empleado.CodigoEmpleado}) de Business Central.")
-            except Exception as e:
-                print(f"Error al procesar la eliminación del empleado {empleado.NombreEmpleado} (ID: {empleado.CodigoEmpleado}): {e}")
-    else:
-        print("No se encontraron empleados en Business Central.")
 
 def get_etag_for_employee(employee_id):
     """
